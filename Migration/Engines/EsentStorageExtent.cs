@@ -1,5 +1,7 @@
 ﻿
 using JetBlue.ESE.Net.Events;
+using JetBlue.ESE.Net.Migration.Engines.Esent.Data;
+using Serilog;
 
 namespace JetBlue.ESE.Net.Migration.Engines.Esent
 {
