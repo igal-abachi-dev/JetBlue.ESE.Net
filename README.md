@@ -1,5 +1,5 @@
 # JetBlue.ESE.Net
-ESE (Extensible Storage Engine / JetBlue) Json Document Store for .Net 6.0
+ESE (Extensible Storage Engine / JetBlue) Json Document Store for .Net 6.0 / C#
 
 uses:
 serilog [error logging],
