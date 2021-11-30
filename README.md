@@ -2,7 +2,9 @@
 ESE (Extensible Storage Engine / JetBlue) Json Document Store for .Net 6.0 / C#
 
 uses:
+
 serilog [error logging],
+
 json serialization (currently newtonsoft but will change to more optimized: Utf8Json or System.Text.Json source generators)
 
 ---
