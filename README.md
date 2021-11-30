@@ -7,6 +7,8 @@ serilog [error logging],
 
 json serialization (currently newtonsoft but will change to more optimized: Utf8Json or System.Text.Json source generators)
 
+autofac ioc modules
+
 ---
 
 based on Esent.Interop c# managed wrapper of ESENT:
