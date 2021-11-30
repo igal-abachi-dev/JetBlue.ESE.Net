@@ -1,4 +1,6 @@
 ﻿
+using JetBlue.ESE.Net.Time;
+
 namespace JetBlue.ESE.Net.Cache
 {
     internal struct SegmentRange : IComparable<SegmentRange>, IEquatable<SegmentRange>
