@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "aIj19SCUnXLBygM79P0ll/VTCwiFXcKVEyRgQ+YIg9wqdbkTp0J2jlsMiT8Rcpt+eMfTrm86csOJJt4//+EUtQ==",
+  "success": true,
+  "projectFilePath": "D:\\ESE\\JetBlue.ESE.Net\\JetBlue.ESE.Net.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Admin\\.nuget\\packages\\newtonsoft.json\\13.0.1\\newtonsoft.json.13.0.1.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\serilog\\2.10.0\\serilog.2.10.0.nupkg.sha512"
+  ],
+  "logs": []
+}
