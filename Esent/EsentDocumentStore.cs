@@ -20,7 +20,7 @@ namespace JetBlue.ESE.Net.Storage.Esent
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
-            this._log = instanceName != null ? Log.ForContext<EsentDocumentStore>().ForContext("InstanceName", (object)instanceName, false) : throw new ArgumentNullException(nameof(instanceName));
+            this._log = instanceName != null ? Log.ForContext<EsentDocumentStore>().ForContext("InstanceName", (object)instanceName) : throw new ArgumentNullException(nameof(instanceName));
             this._path = Path.GetFullPath(path);
             this._log.Information<string>("Opening metastore {MetastorePath}", this._path);
             string directoryName = Path.GetDirectoryName(this._path);
@@ -33,8 +33,8 @@ namespace JetBlue.ESE.Net.Storage.Esent
                 }
                 catch (Exception ex)
                 {
-                    string str = directoryName;
-                    Log.Fatal<string>(ex, "Unable to create directory '{Directory:l}'", str);
+                    string propertyValue = directoryName;
+                    Log.Fatal<string>(ex, "Unable to create directory '{Directory:l}'", propertyValue);
                     Environment.Exit(1);
                 }
             }
@@ -87,19 +87,12 @@ namespace JetBlue.ESE.Net.Storage.Esent
             }
         }
 
-        public override void Migrate(
-          IEnumerable<Lazy<IMigration, MigrationMetadata>> migrations)
-        {
-            Migrator.Migrate(this, migrations, this._log);
-        }
+        public override void Migrate(MigrationList migrations) => Migrator.Migrate(this, migrations, this._log);
 
-        internal EsentDocumentSession BeginEsentDocumentSession(string tag = null)
-        {
-            this._log.Verbose<string>("Beginning a new {Tag} document session", tag);
-            return new EsentDocumentSession(this._instance, this._path);
-        }
+        internal EsentDocumentSession BeginEsentDocumentSession() => new EsentDocumentSession(this._instance, this._path);
 
-        public override DocumentSession BeginSession(string tag = null) => (DocumentSession)this.BeginEsentDocumentSession();
+
+        public override DocumentSession BeginSession() => (DocumentSession)this.BeginEsentDocumentSession();
 
         public override void Dispose()
         {
@@ -110,6 +103,8 @@ namespace JetBlue.ESE.Net.Storage.Esent
         }
 
         public override MigrationState ExportMigrationState() => Migrator.GetAppliedMigrations(this, this._log);
+
+        public override bool CanImportMigrationState => false;
 
         public override void ImportMigrationState(MigrationState migrationState) => throw new NotSupportedException();
     }

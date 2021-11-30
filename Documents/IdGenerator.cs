@@ -1,4 +1,5 @@
 ﻿
+using System.Threading;
 namespace JetBlue.ESE.Net.Documents
 {
     public class IdGenerator
@@ -10,8 +11,11 @@ namespace JetBlue.ESE.Net.Documents
 
         public long Next(DocumentSession kvs)
         {
-            lock (this._lock)
+            object obj = this._lock;
+            bool lockTaken = false;
+            try
             {
+                Monitor.Enter(obj, ref lockTaken);
                 if (this._next.HasValue && this._next.Value < this._sequence.NextBlockStart)
                 {
                     long num1 = this._next.Value;
@@ -29,6 +33,11 @@ namespace JetBlue.ESE.Net.Documents
                 this._sequence.NextBlockStart += 32L;
                 kvs.Store("idsequence-global", (object)this._sequence);
                 return this.Next(kvs);
+            }
+            finally
+            {
+                if (lockTaken)
+                    Monitor.Exit(obj);
             }
         }
     }

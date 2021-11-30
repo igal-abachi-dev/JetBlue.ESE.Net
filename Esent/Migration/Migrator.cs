@@ -21,7 +21,7 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
 
         public static void Migrate(
           EsentDocumentStore store,
-          IEnumerable<Lazy<IMigration, MigrationMetadata>> migrations,
+      MigrationList migrations,
           ILogger migrationLog)
         {
             ILogger log = migrationLog.ForContext("SourceContext", (object)typeof(Migrator).FullName, false);
@@ -41,7 +41,7 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
                 Name = _param1.name
             }).ToArray();
             log.Debug<int>("{CountToApply} migrations to apply", array.Length);
-            using (EsentDocumentSession session = store.BeginEsentDocumentSession("migration"))
+            using (EsentDocumentSession session = store.BeginEsentDocumentSession())
             {
                 Table table;
                 IDictionary<string, JET_COLUMNID> columns;
@@ -49,23 +49,17 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
                 JET_COLUMNID migrationNameColumn = columns["MigrationName"];
                 JET_COLUMNID appliedAtColumn = columns["AppliedAtUtc"];
                 foreach (var data in array)
-                    Migrator.Apply(session, data.Name, !data.Metadata.SuppressTransaction, data.Value, table, migrationNameColumn, appliedAtColumn, log, firstRun);
+                    Migrator.Apply(session, data.Name, data.Value, table, migrationNameColumn, appliedAtColumn, log, firstRun);
             }
             log.Debug("All migrations complete");
         }
 
-        private static string GetMigrationName(MigrationMetadata migration)
-        {
-            string str = migration.Name;
-            if (migration.IsVersionSpecific)
-                str = str + " - " + migration.Type.Assembly.GetName().Version?.ToString();
-            return str;
-        }
+        private static string GetMigrationName(MigrationMetadata migration) => migration.Name;
+
 
         private static void Apply(
           EsentDocumentSession session,
           string migrationName,
-          bool transactional,
           IMigration migration,
           Table schemaVersions,
           JET_COLUMNID migrationNameColumn,
@@ -73,14 +67,9 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
           ILogger log,
           bool firstRun)
         {
-            LogEventLevel logEventLevel = firstRun ? (LogEventLevel)1 : (LogEventLevel)2;
-            log.Write<string>(logEventLevel, "Applying migration {MigrationName}", migrationName);
-            Transaction transaction = (Transaction)null;
-            if (transactional)
-                transaction = session.BeginTransaction();
-            else
-                log.Write<string>(logEventLevel, "Transaction suppressed for {MigrationName}", migrationName);
-            try
+            LogEventLevel level = firstRun ? LogEventLevel.Debug : LogEventLevel.Information;
+            log.Write<string>(level, "Applying migration {MigrationName}", migrationName);
+            using (Transaction transaction = session.BeginTransaction())
             {
                 migration.Apply((DocumentSession)session);
                 using (Update update = session.PrepareInsert(schemaVersions))
@@ -92,10 +81,6 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
                 transaction?.Commit(CommitTransactionGrbit.None);
                 log.Debug("Migration applied successfully");
             }
-            finally
-            {
-                transaction?.Dispose();
-            }
         }
 
         public static MigrationState GetAppliedMigrations(
@@ -104,7 +89,7 @@ namespace JetBlue.ESE.Net.Storage.Esent.Migration
         {
             MigrationState migrationState = new MigrationState();
             DateTime utcNow = DateTime.UtcNow;
-            using (EsentDocumentSession session = store.BeginEsentDocumentSession("migration check"))
+            using (EsentDocumentSession session = store.BeginEsentDocumentSession())
             {
                 Table table;
                 IDictionary<string, JET_COLUMNID> columns;

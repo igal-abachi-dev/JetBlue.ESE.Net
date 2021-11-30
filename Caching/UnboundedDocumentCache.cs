@@ -9,7 +9,7 @@ namespace JetBlue.ESE.Net.Caching
     public class UnboundedDocumentCache
     {
         private readonly object _sync = new object();
-        private volatile ImmutableSortedDictionary<string, string> _current = (ImmutableSortedDictionary<string, string>)ImmutableSortedDictionary<string, string>.Empty;
+        private volatile ImmutableSortedDictionary<string, string> _current = ImmutableSortedDictionary<string, string>.Empty;
 
         public void BeginWrite() => Monitor.Enter(this._sync);
 
@@ -26,7 +26,7 @@ namespace JetBlue.ESE.Net.Caching
 
         public void Unset(string key) => this._current = this._current.Remove(key);
 
-        public void Clear() => this._current = (ImmutableSortedDictionary<string, string>)ImmutableSortedDictionary<string, string>.Empty;
+        public void Clear() => this._current = ImmutableSortedDictionary<string, string>.Empty;
 
         public bool TryGet(string key, out string value) => this._current.TryGetValue(key, out value);
 

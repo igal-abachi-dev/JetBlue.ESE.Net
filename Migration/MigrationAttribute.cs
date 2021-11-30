@@ -15,9 +15,5 @@ namespace JetBlue.ESE.Net.Migration
         public int Order { get; }
 
         public string Name { get; }
-
-        public bool IsVersionSpecific { get; set; }
-
-        public bool SuppressTransaction { get; set; }
     }
 }

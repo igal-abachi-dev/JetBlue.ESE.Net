@@ -1,5 +1,6 @@
 ﻿using JetBlue.ESE.Net.Documents;
 using JetBlue.ESE.Net.Serialization;
+using JetBlue.ESE.Net.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,20 +10,20 @@ namespace JetBlue.ESE.Net.Caching
 {
     public class CachingDocumentSession : DocumentSession
     {
-        private readonly Lazy<DocumentSession> _inner;
+        private readonly Recyclable<DocumentSession> _inner;
         private readonly UnboundedDocumentCache _cache;
         private readonly CancellationToken _disableWrites;
 
         public CachingDocumentSession(
           DocumentStore store,
           UnboundedDocumentCache cache,
-          string tag,
           CancellationToken disableWrites)
         {
-            this._inner = store != null ? new Lazy<DocumentSession>((Func<DocumentSession>)(() => store.BeginSession(tag))) : throw new ArgumentNullException(nameof(store));
+            this._inner = store != null ? new Recyclable<DocumentSession>(new Func<DocumentSession>(store.BeginSession)) : throw new ArgumentNullException(nameof(store));
             this._cache = cache ?? throw new ArgumentNullException(nameof(cache));
             this._disableWrites = disableWrites;
         }
+        public override void Dispose() => this._inner.Dispose();
 
         private void EnsureWriteable()
         {
@@ -37,7 +38,7 @@ namespace JetBlue.ESE.Net.Caching
             this._cache.BeginWrite();
             try
             {
-                this._inner.Value.Store(id, document);
+                Retry.WithRecovery(3, (Action)(() => this._inner.Value.Store(id, document)), (Action)(() => this._inner.Recycle()));
                 this._cache.Set(id, str);
             }
             finally
@@ -71,7 +72,7 @@ namespace JetBlue.ESE.Net.Caching
             this._cache.BeginWrite();
             try
             {
-                if (!this._inner.Value.Remove(id))
+                if (!Retry.WithRecovery<bool>(3, (Func<bool>)(() => this._inner.Value.Remove(id)), (Action)(() => this._inner.Recycle())))
                     return false;
                 this._cache.Unset(id);
                 return true;
@@ -96,20 +97,13 @@ namespace JetBlue.ESE.Net.Caching
             this._cache.BeginWrite();
             try
             {
-                this._inner.Value.Import(id, json);
+                Retry.WithRecovery(3, (Action)(() => this._inner.Value.Import(id, json)), (Action)(() => this._inner.Recycle()));
                 this._cache.Set(id, json);
             }
             finally
             {
                 this._cache.EndWrite();
             }
-        }
-
-        public override void Dispose()
-        {
-            if (!this._inner.IsValueCreated)
-                return;
-            this._inner.Value.Dispose();
         }
     }
 }

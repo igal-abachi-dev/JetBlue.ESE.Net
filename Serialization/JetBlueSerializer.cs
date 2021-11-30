@@ -12,6 +12,7 @@ namespace JetBlue.ESE.Net.Serialization
     {
         private static readonly JsonSerializer Serializer = JetBlueSerializer.MakeSerializer();
 
+        public static T Deserialize<T>(JsonReader reader) => JetBlueSerializer.Serializer.Deserialize<T>(reader);
         public static T Deserialize<T>(string text) => JetBlueSerializer.Serializer.Deserialize<T>((JsonReader)new JsonTextReader((TextReader)new StringReader(text)));
 
         public static string Serialize(object value)
@@ -26,7 +27,7 @@ namespace JetBlue.ESE.Net.Serialization
             JsonSerializer jsonSerializer = new JsonSerializer();
             jsonSerializer.Converters.Add(new Iso8601TimeSpanConverter());
             jsonSerializer.Converters.Add(new StringEnumConverter());
-            jsonSerializer.DateTimeZoneHandling = (DateTimeZoneHandling)1;
+            jsonSerializer.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
             return jsonSerializer;
         }
     }

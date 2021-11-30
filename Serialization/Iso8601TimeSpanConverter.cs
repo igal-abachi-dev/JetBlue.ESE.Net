@@ -8,7 +8,7 @@ namespace JetBlue.ESE.Net.Serialization
 {
     internal class Iso8601TimeSpanConverter : JsonConverter
     {
-        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             if (value == null)
             {
@@ -21,7 +21,7 @@ namespace JetBlue.ESE.Net.Serialization
             }
         }
 
-        public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+        public override object? ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             string s = reader.Value as string;
             return string.IsNullOrWhiteSpace(s) ? (object)null : (object)XmlConvert.ToTimeSpan(s);
